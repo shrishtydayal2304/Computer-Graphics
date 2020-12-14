@@ -1,0 +1,121 @@
+Write to fill a region using C algorithms using 4 or 8 connected approaches.
+ Boundary Fill Algorithm starts at a pixel inside the polygon to be filled and paints the interior proceeding outwards towards the boundary. This algorithm works only if the color with which the region has to be filled and the color of the boundary of the region are different. If the boundary is of one single color, this approach proceeds outwards pixel by pixel until it hits the boundary of the region. 
+The boundary fill algorithm can be implemented by 4-connected pixels or 8-connected pixels.
+4-connected pixels : After painting a pixel, the function is called for four neighboring points. These are the pixel positions that are right, left, above and below the current pixel. Areas filled by this method are called 4-connected. Below given is the algorithm :
+Algorithm :
+
+
+
+void boundaryFill4(int x, int y, int fill_color,int boundary_color)
+{
+    if(getpixel(x, y) != boundary_color &&
+       getpixel(x, y) != fill_color)
+    {
+        putpixel(x, y, fill_color);
+        boundaryFill4(x + 1, y, fill_color, boundary_color);
+        boundaryFill4(x, y + 1, fill_color, boundary_color);
+        boundaryFill4(x - 1, y, fill_color, boundary_color);
+        boundaryFill4(x, y - 1, fill_color, boundary_color);
+    }
+}
+
+8-connected pixels : More complex figures are filled using this approach. The pixels to be tested are the 8 neighboring pixels, the pixel on the right, left, above, below and the 4 diagonal pixels. Areas filled by this method are called 8-connected. Below given is the algorithm :
+
+Algorithm :
+
+void boundaryFill8(int x, int y, int fill_color,int boundary_color)
+{
+    if(getpixel(x, y) != boundary_color &&
+       getpixel(x, y) != fill_color)
+    {
+        putpixel(x, y, fill_color);
+        boundaryFill8(x + 1, y, fill_color, boundary_color);
+        boundaryFill8(x, y + 1, fill_color, boundary_color);
+        boundaryFill8(x - 1, y, fill_color, boundary_color);
+        boundaryFill8(x, y - 1, fill_color, boundary_color);
+        boundaryFill8(x - 1, y - 1, fill_color, boundary_color);
+        boundaryFill8(x - 1, y + 1, fill_color, boundary_color);
+        boundaryFill8(x + 1, y - 1, fill_color, boundary_color);
+        boundaryFill8(x + 1, y + 1, fill_color, boundary_color);
+    }
+}
+ 
+
+
+
+
+
+
+
+Code:
+
+#include<stdio.h>
+#include <math.h>
+#include <GL/glut.h>
+void init(){
+    glClearColor(1.0,1.0,1.0,0.0);
+    glMatrixMode(GL_PROJECTION);
+    gluOrtho2D(0,640,0,480);
+}
+
+void boundary(int x, int y, float* fillColor, float* bc){
+    float color[3];
+    glReadPixels(x,y,1.0,1.0,GL_RGB,GL_FLOAT,color);
+    if(x>=150 && x<=450 && y>=100 && y<=300){
+    if((color[0]!=bc[0] || color[1]!=bc[1] || color[2]!=bc[2])&&(
+     color[0]!=fillColor[0] || color[1]!=fillColor[1] ||
+color[2]!=fillColor[2])){
+        glColor3f(fillColor[0],fillColor[1],fillColor[2]);
+        glBegin(GL_POINTS);
+            glVertex2i(x,y);
+        glEnd();
+        glFlush();
+        boundary(x,y-2,fillColor,bc);
+        boundary(x+1,y,fillColor,bc);
+        boundary(x-2,y,fillColor,bc);
+        boundary(x,y+2,fillColor,bc);
+    }
+    }
+}
+
+
+void mouse(int btn, int state, int x, int y){
+    y = 480-y;
+    if(btn==GLUT_LEFT_BUTTON)
+    {
+        if(state==GLUT_DOWN)
+        {
+            float bCol[] = {1,0,0};
+            float color[] = {0,1,0};
+
+            boundary(x,y,color,bCol);
+        }
+    }
+}
+
+void world(){
+    glLineWidth(3);
+    glPointSize(2);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1,0,0);
+    glBegin(GL_LINE_LOOP);
+        glVertex2i(150,100);
+        glVertex2i(150,300);
+        glVertex2i(450,300);
+        glVertex2i(450,100);
+    glEnd();
+    glFlush();
+}
+
+int main(int argc, char** argv){
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+    glutInitWindowSize(640,480);
+    glutInitWindowPosition(200,200);
+    glutCreateWindow("boundaryfill");
+    glutDisplayFunc(world);
+    glutMouseFunc(mouse);
+    init();
+    glutMainLoop();
+    return 0;
+}
