@@ -1,0 +1,130 @@
+Write to fill a region using flood fill algorithms using 4 or 8 connected approaches.
+In this method, a point or seed which is inside region is selected. This point is called a seed point. Then four connected approaches or eight connected approaches is used to fill with specified color.
+The flood fill algorithm has many characters similar to boundary fill. But this method is more suitable for filling multiple colors boundary. When boundary is of many colors and interior is to be filled with one color we use this algorithm.
+ Algorithm:
+1.	Procedure floodfill (x, y,fill_ color, old_color: integer)  
+2.	    If (getpixel (x, y)=old_color)  
+3.	   {  
+4.	    setpixel (x, y, fill_color);  
+5.	    fill (x+1, y, fill_color, old_color);  
+6.	     fill (x-1, y, fill_color, old_color);  
+7.	    fill (x, y+1, fill_color, old_color);  
+8.	    fill (x, y-1, fill_color, old_color);  
+9.	     }  
+10.	}  
+ 	
+Code:
+
+
+#include<GL/glut.h>
+#include<stdio.h>
+
+int numberOfPoints;
+float ox = 200,oy = 200;//Origin Coordinates
+int count = 0;
+
+void init(void)
+{
+ glClearColor(1.0,1.0,1.0,0.0);
+ glMatrixMode(GL_PROJECTION);
+ gluOrtho2D(-200,200,-200,200.0);
+}
+void drawLine(float x1, float y1, float x2, float y2, float R, float G, float B){
+  glColor3f(R,G,B);
+  glBegin(GL_LINES);
+    glVertex2f(x1,y1);
+    glVertex2f(x2,y2);
+  glEnd();
+}
+void getPixelColor(int x, int y, float *pixel){
+  glReadPixels(x+oy, y+ox, 1.0, 1.0, GL_RGB, GL_FLOAT, pixel);
+}
+int arrCmp(float *arr1, float *arr2, int size){
+  for(int i=0;i<size;i++){
+    if(arr1[i] != arr2[i])
+      return 0;
+  }
+  return 1;
+}
+void plotPoint(int x,int y, float R, float G, float B)
+{
+ glColor3f(R,G,B);
+ glBegin(GL_POINTS);
+  glVertex2i(x,y);
+ glEnd();
+ glFlush();
+}
+void drawPolygon(int (*arr)[2], int n, float R, float G, float B){
+  glColor3f(R,G,B);
+  glBegin(GL_POLYGON);
+    for(int i = 0; i < n; i++)
+      glVertex2i(arr[i][0],arr[i][1]);
+  glEnd();
+}
+void floodFill4(int x, int y, float *fill, float *old){
+  float current[3];
+  getPixelColor(x,y,current);
+  if(arrCmp(old,current,3)){
+    plotPoint(x,y,fill[0],fill[1],fill[2]);
+    floodFill4(x+1,y,fill,old);
+    floodFill4(x-1,y,fill,old);
+    floodFill4(x,y+1,fill,old);
+    floodFill4(x,y-1,fill,old);
+  }
+}
+void mousePlotPoint(GLint button, GLint action, GLint xMouse, GLint yMouse)
+{
+  GLint wh=400;
+  float x=xMouse-ox;
+  float y=wh-yMouse-oy;
+  static int arr[3][2];
+  if(button == GLUT_LEFT_BUTTON && action == GLUT_UP)
+  {
+    if(count == -1){
+      float fill[] = {0,1,0};
+      float old[3];
+      getPixelColor(x,y,old);
+      floodFill4(x,y,fill,old);
+    }
+    else if(count == 2){
+      printf("\nPoint: (%f, %f)",x, y);
+      arr[2][0] = x;
+      arr[2][1] = y;
+      count++;
+      drawPolygon(arr,count,1,0,0);
+      printf("\n\n=========================================================================\n");
+      count = -1;
+    }
+    else{
+      printf("\nPoint: (%f, %f)",x, y);
+      arr[count][0] = x;
+      arr[count][1] = y;
+      count++;
+    }
+    
+  }
+ glFlush();
+}
+void display(void)
+{
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  
+}
+
+int main(int argc, char** argv)
+{
+  glutInit(&argc,argv);
+  glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+  glutInitWindowPosition(0,0);
+  glutInitWindowSize(400,400);
+  glutCreateWindow("Flood Fill");
+
+  init();
+  glutDisplayFunc(display);
+  glutMouseFunc(mousePlotPoint);
+
+  glutMainLoop();
+  return 0;
+} 
+
